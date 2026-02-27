@@ -1080,8 +1080,9 @@
                     productMap = {};
                     items.forEach(item => {
                         productMap[item.id] = {
+                            name: item.name,
                             hargaDasar: item.hargaDasar || 0,
-                            name: item.name
+                            unitConversions: item.unitConversions || []  // ⬅️ penting untuk konversi satuan
                         };
                     });
                     resolve();
@@ -1121,45 +1122,104 @@
 
         function aggregateProductSales(salesData) {
             const productSales = {};
+        
             salesData.forEach(transaction => {
                 if (!transaction.items) return;
+        
                 transaction.items.forEach(item => {
                     if (item.isBundle) {
+                        // ===== PROSES BUNDLE =====
+                        const bundleSubtotal = item.subtotal || 0;
+        
+                        // Hitung total biaya komponen untuk bundle ini
+                        let totalComponentCost = 0;
+                        const componentsWithQty = [];
+        
                         if (item.components && Array.isArray(item.components)) {
                             item.components.forEach(comp => {
                                 const productId = comp.itemId;
                                 if (!productId) return;
-                                let qtyBase = comp.qty * item.qty;
+        
+                                const productInfo = productMap[productId];
+                                if (!productInfo) return;
+        
+                                // Hitung kuantitas dalam satuan dasar (pcs)
+                                let qtyBase = comp.qty * (item.qty || 1);
                                 if (comp.unitConversionId) {
-                                    const conv = productMap[productId]?.unitConversions?.find(u => u.id == comp.unitConversionId);
+                                    const conv = productInfo.unitConversions?.find(u => u.id == comp.unitConversionId);
                                     if (conv) qtyBase *= conv.value;
                                 }
+        
+                                const cost = productInfo.hargaDasar * qtyBase;
+                                totalComponentCost += cost;
+                                componentsWithQty.push({
+                                    productId,
+                                    qtyBase,
+                                    cost,
+                                    productInfo
+                                });
+                            });
+                        }
+        
+                        // Alokasikan pendapatan ke masing-masing komponen
+                        if (totalComponentCost > 0 && componentsWithQty.length > 0) {
+                            componentsWithQty.forEach(comp => {
+                                const { productId, qtyBase, cost } = comp;
+                                const allocationRatio = cost / totalComponentCost;
+                                const allocatedRevenue = bundleSubtotal * allocationRatio;
+                                const allocatedProfit = allocatedRevenue - cost;
+        
                                 if (!productSales[productId]) {
-                                    productSales[productId] = { productId, productName: productMap[productId]?.name || 'Unknown', totalQtyBase: 0, totalRevenue: 0, grossProfit: 0 };
+                                    productSales[productId] = {
+                                        productId,
+                                        productName: comp.productInfo.name,
+                                        totalQtyBase: 0,
+                                        totalRevenue: 0,
+                                        grossProfit: 0
+                                    };
                                 }
+        
                                 productSales[productId].totalQtyBase += qtyBase;
+                                productSales[productId].totalRevenue += allocatedRevenue;
+                                productSales[productId].grossProfit += allocatedProfit;
                             });
                         }
                     } else {
+                        // ===== PROSES PRODUK BIASA (BUKAN BUNDLE) =====
                         const productId = item.itemId;
                         if (!productId) return;
-                        let qtyBase = item.qty;
-                        if (item.unitConversion && item.unitConversion.value) qtyBase *= item.unitConversion.value;
-                        const revenue = item.subtotal || 0;
-                        if (!productSales[productId]) {
-                            productSales[productId] = { productId, productName: item.itemName, totalQtyBase: 0, totalRevenue: 0, grossProfit: 0 };
+        
+                        let qtyBase = item.qty || 0;
+                        if (item.unitConversion && item.unitConversion.value) {
+                            qtyBase *= item.unitConversion.value;
                         }
+        
+                        const revenue = item.subtotal || 0;
+                        const productInfo = productMap[productId] || { name: item.itemName || 'Unknown', hargaDasar: 0 };
+        
+                        if (!productSales[productId]) {
+                            productSales[productId] = {
+                                productId,
+                                productName: productInfo.name,
+                                totalQtyBase: 0,
+                                totalRevenue: 0,
+                                grossProfit: 0
+                            };
+                        }
+        
                         productSales[productId].totalQtyBase += qtyBase;
                         productSales[productId].totalRevenue += revenue;
-                        const productInfo = productMap[productId];
-                        if (productInfo && productInfo.hargaDasar > 0) {
-                            const cost = productInfo.hargaDasar * qtyBase;
-                            productSales[productId].grossProfit += (revenue - cost);
-                        }
+        
+                        // Hitung laba kotor (jika harga dasar tersedia)
+                        const cost = (productInfo.hargaDasar || 0) * qtyBase;
+                        productSales[productId].grossProfit += (revenue - cost);
                     }
                 });
             });
+        
+            // Hitung rata-rata harga dan kontribusi persen
             const totalRevenueAll = salesData.reduce((sum, t) => sum + (t.total || 0), 0);
+        
             return Object.values(productSales).map(p => ({
                 ...p,
                 avgPrice: p.totalQtyBase > 0 ? p.totalRevenue / p.totalQtyBase : 0,
