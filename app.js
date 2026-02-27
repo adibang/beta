@@ -2240,10 +2240,17 @@ async function processPayment(autoPrint = false) {
 
 async function processPaymentWithPiutang(autoPrint = false) {
     console.log('processPaymentWithPiutang dipanggil, autoPrint:', autoPrint);
-    closeConfirmPiutangModal();
+    
+    // Simpan nilai pendingTotalPaid sebelum modal ditutup (karena close akan meresetnya)
+    const paid = pendingTotalPaid;
     const total = cart.reduce((sum, c) => sum + c.subtotal, 0);
-    const shortage = total - pendingTotalPaid;
-    await executePayment(pendingTotalPaid, shortage);
+    const shortage = total - paid;
+    
+    // Tutup modal konfirmasi (akan mereset pendingPayments dan pendingTotalPaid)
+    closeConfirmPiutangModal();
+    
+    // Proses pembayaran dengan nilai yang sudah disimpan
+    await executePayment(paid, shortage);
     await handlePostPayment(autoPrint);
 }
 
