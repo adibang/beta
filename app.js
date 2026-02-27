@@ -2379,7 +2379,11 @@ async function executePayment(paidTotal, outstandingAdded) {
             qty: c.qty,
             pricePerUnit: c.pricePerUnit,
             subtotal: c.subtotal,
-            unitConversion: c.unitConversion ? { id: c.unitConversion.unit, name: kasirSatuan.find(s => s.id == c.unitConversion.unit)?.name } : null,
+            unitConversion: c.unitConversion ? { 
+                id: c.unitConversion.unit, 
+                name: kasirSatuan.find(s => s.id == c.unitConversion.unit)?.name,
+                value: c.unitConversion.value   // ⬅️ tambahkan nilai konversi
+            } : null,
             weightGram: c.weightGram || 0,
             cost: (c.unitConversion?.basePrice || c.item.hargaDasar || 0),
             isBundle: c.isBundle || false,
