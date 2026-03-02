@@ -1993,10 +1993,12 @@
             <div class="modal-header">
                 <h2 class="modal-title">Simpan Draft Transaksi</h2>
             </div>
+            <!-- Di bagian modal pending-code-modal, tambahkan elemen error -->
             <div class="modal-body">
                 <div style="margin-bottom:15px;">
                     <label style="display:block; margin-bottom:8px; color:#333; font-weight:500;">Kode / Nama Pending</label>
-                    <input type="text" id="pending-code-input" class="form-input" placeholder="Misal: PENDING-001" autocomplete="off">
+                    <input type="text" id="pending-code-input" class="form-input" placeholder="Misal: PENDING-001" autocomplete="off" onkeyup="validatePendingCode(this)">
+                    <div id="pending-code-error" style="font-size:0.85rem; margin-top:5px; min-height:20px;"></div>
                     <small style="color:#666;">Kosongkan untuk menggunakan nama default</small>
                 </div>
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
