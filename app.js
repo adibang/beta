@@ -3716,9 +3716,39 @@ function goHome() {
     document.getElementById('transaksi-page').style.display = 'none';
     document.getElementById('cart-page').style.display = 'none';
     document.getElementById('payment-page').style.display = 'none';
+    document.getElementById('drive-backup-page').style.display = 'none';
     document.querySelector('.main-content').style.display = 'block';
     closeDrawer();
 }
+
+// ==================== FUNGSI HALAMAN GOOGLE DRIVE BACKUP ====================
+function openDriveBackupPage() {
+    // Sembunyikan semua halaman lain
+    document.querySelector('.main-content').style.display = 'none';
+    document.getElementById('transaksi-page').style.display = 'none';
+    document.getElementById('cart-page').style.display = 'none';
+    document.getElementById('payment-page').style.display = 'none';
+    // Tampilkan halaman backup
+    document.getElementById('drive-backup-page').style.display = 'block';
+    closeDrawer();
+
+    // Perbarui status dan data backup
+    const token = window.getSavedToken ? window.getSavedToken() : null;
+    window.updateDriveUI(!!token, token);
+    window.loadDriveSettings();
+    if (token) {
+        window.loadBackupList();
+    }
+}
+
+function closeDriveBackupPage() {
+    document.getElementById('drive-backup-page').style.display = 'none';
+    document.querySelector('.main-content').style.display = 'block';
+}
+
+// Pastikan fungsi tersedia secara global
+window.openDriveBackupPage = openDriveBackupPage;
+window.closeDriveBackupPage = closeDriveBackupPage;
 
 // ==================== INISIALISASI APLIKASI ====================
 async function initApp() {
