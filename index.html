@@ -1675,14 +1675,13 @@
             </div>
         </div>
         <!-- Grup SISTEM -->
-        <!-- Grup SISTEM -->
         <div class="menu-group" id="menu-sistem">
             <div class="menu-header" onclick="toggleSubMenu(this)">
                 <span class="menu-title">SISTEM</span>
                 <span class="arrow">></span>
             </div>
             <div class="sub-menu">
-                <!-- Tombol Export Data (sudah ada) -->
+                <!-- Tombol Export Data -->
                 <button onclick="exportData(); closeSubMenu(this);">
                     <svg class="icon" viewBox="0 0 24 24">
                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
@@ -1691,7 +1690,7 @@
                     </svg>
                     <span>Export Data</span>
                 </button>
-                <!-- Tombol Import Data (sudah ada) -->
+                <!-- Tombol Import Data -->
                 <button onclick="importData(); closeSubMenu(this);">
                     <svg class="icon" viewBox="0 0 24 24">
                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
@@ -1700,7 +1699,7 @@
                     </svg>
                     <span>Import Data</span>
                 </button>
-                <!-- ===== TOMBOL BARU: EXPORT HARGA ===== -->
+                <!-- Tombol Export Harga -->
                 <button onclick="exportPrices(); closeSubMenu(this);">
                     <svg class="icon" viewBox="0 0 24 24">
                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
@@ -1709,7 +1708,7 @@
                     </svg>
                     <span>Export Harga</span>
                 </button>
-                <!-- ===== TOMBOL BARU: IMPORT HARGA ===== -->
+                <!-- Tombol Import Harga -->
                 <button onclick="importPrices(); closeSubMenu(this);">
                     <svg class="icon" viewBox="0 0 24 24">
                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
@@ -1718,103 +1717,16 @@
                     </svg>
                     <span>Import Harga</span>
                 </button>
-            </div>
-            <!-- ==================== GOOGLE DRIVE BACKUP SECTION ==================== -->
-            <div style="margin-bottom:20px; border-top:1px solid #ddd; padding-top:20px;">
-                <div style="color:#333333;margin-bottom:15px;font-weight:600;font-size:1rem;display:flex;align-items:center;gap:8px;">
-                    <svg class="icon icon-sm" viewBox="0 0 24 24" style="color:#006B54;">
+                <!-- Tombol Backup Google Drive (baru) -->
+                <button onclick="openDriveBackupPage(); closeSubMenu(this);">
+                    <svg class="icon" viewBox="0 0 24 24">
                         <path d="M4 6h16v12H4z"/>
                         <path d="M8 6V4h8v2"/>
-                        <path d="M8 12h8"/>
-                        <path d="M8 16h4"/>
                     </svg>
-                    Google Drive Backup
-                </div>
-                
-                <!-- Status Koneksi -->
-                <div id="drive-status" style="background:#f5f5f5; border-radius:15px; padding:15px; margin-bottom:15px;">
-                    <div style="display:flex; align-items:center; justify-content:space-between;">
-                        <div>
-                            <span id="drive-connection-status" style="font-weight:600; color:#999;">🔴 Tidak terhubung</span>
-                            <div id="drive-user-info" style="font-size:0.85rem; color:#666; margin-top:5px;"></div>
-                        </div>
-                        <button id="drive-connect-btn" class="form-button-primary" style="width:auto; padding:8px 16px;" onclick="connectGoogleDrive()">
-                            <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" fill="none">
-                                <path d="M4 6h16v12H4z"/>
-                                <path d="M8 6V4h8v2"/>
-                            </svg>
-                            Hubungkan
-                        </button>
-                        <button id="drive-disconnect-btn" class="form-button-secondary" style="width:auto; padding:8px 16px; display:none;" onclick="disconnectGoogleDrive()">
-                            Putuskan
-                        </button>
-                    </div>
-                </div>
-                
-                <!-- Pengaturan Auto Backup -->
-                <div id="drive-settings" style="margin-bottom:15px; opacity:0.5; pointer-events:none;">
-                    <div style="margin-bottom:10px;">
-                        <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
-                            <input type="checkbox" id="auto-backup-transaction" onchange="saveDriveSettings()">
-                            <span>Backup otomatis setiap transaksi</span>
-                        </label>
-                    </div>
-                    
-                    <div style="margin-bottom:15px;">
-                        <label style="display:block; margin-bottom:5px;">Interval backup otomatis</label>
-                        <select id="backup-interval" class="form-input" onchange="saveDriveSettings()" style="width:100%;">
-                            <option value="1">Setiap 1 jam</option>
-                            <option value="3">Setiap 3 jam</option>
-                            <option value="6">Setiap 6 jam</option>
-                            <option value="12">Setiap 12 jam</option>
-                            <option value="24">Setiap 24 jam</option>
-                        </select>
-                    </div>
-                    
-                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px;">
-                        <button class="form-button-primary" onclick="manualBackup()">
-                            <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" fill="none">
-                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                                <polyline points="7 10 12 15 17 10"/>
-                                <line x1="12" y1="15" x2="12" y2="3"/>
-                            </svg>
-                            Backup Sekarang
-                        </button>
-                        <button class="form-button-secondary" onclick="openDriveFolder()">
-                            <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" fill="none">
-                                <path d="M4 6h16v12H4z"/>
-                                <line x1="8" y1="12" x2="16" y2="12"/>
-                            </svg>
-                            Buka Folder
-                        </button>
-                    </div>
-                    
-                    <!-- Info Backup Terakhir -->
-                    <div style="background:#f0f9f6; border-radius:10px; padding:10px; margin-top:10px;">
-                        <div style="font-weight:600; color:#006B54; margin-bottom:5px;">Backup Terakhir</div>
-                        <div id="last-backup-info" style="font-size:0.9rem; color:#333;">Belum pernah backup</div>
-                    </div>
-                    
-                    <!-- Daftar Backup -->
-                    <div style="margin-top:15px;">
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                            <span style="font-weight:600; color:#333;">Riwayat Backup (10 terakhir)</span>
-                            <button class="action-btn edit-btn" onclick="refreshBackupList()" style="width:36px; height:36px;" title="Refresh">
-                                <svg viewBox="0 0 24 24" width="18" height="18">
-                                    <path d="M23 4v6h-6"/>
-                                    <path d="M1 20v-6h6"/>
-                                    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
-                                </svg>
-                            </button>
-                        </div>
-                        <div id="backup-list" style="max-height:200px; overflow-y:auto; border:1px solid #eee; border-radius:10px;">
-                            <div style="text-align:center; padding:20px; color:#999;">Hubungkan Google Drive untuk melihat backup</div>
-                        </div>
-                    </div>
-                </div>
+                    <span>Backup Google Drive</span>
+                </button>
             </div>
         </div>
-        
     </div>
     <div class="drawer-overlay" id="drawer-overlay" onclick="closeDrawer()"></div>
 
@@ -2054,6 +1966,102 @@
                     </svg>
                     Print Struk
                 </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== HALAMAN GOOGLE DRIVE BACKUP ==================== -->
+    <div id="drive-backup-page" style="display: none; max-width: 1200px; margin: 0 auto; padding: 20px;">
+        <div class="backup-header" style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px;">
+            <button class="back-button" onclick="closeDriveBackupPage()" title="Kembali ke Beranda">
+                <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none">
+                    <line x1="19" y1="12" x2="5" y2="12"></line>
+                    <polyline points="12 19 5 12 12 5"></polyline>
+                </svg>
+            </button>
+            <h2 style="color: #006B54; margin: 0;">Google Drive Backup</h2>
+        </div>
+        <div class="backup-content" style="background: white; border-radius: 15px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+            <!-- Status Koneksi -->
+            <div id="drive-status" style="background:#f5f5f5; border-radius:15px; padding:15px; margin-bottom:15px;">
+                <div style="display:flex; align-items:center; justify-content:space-between;">
+                    <div>
+                        <span id="drive-connection-status" style="font-weight:600; color:#999;">🔴 Tidak terhubung</span>
+                        <div id="drive-user-info" style="font-size:0.85rem; color:#666; margin-top:5px;"></div>
+                    </div>
+                    <button id="drive-connect-btn" class="form-button-primary" style="width:auto; padding:8px 16px;" onclick="connectGoogleDrive()">
+                        <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" fill="none">
+                            <path d="M4 6h16v12H4z"/>
+                            <path d="M8 6V4h8v2"/>
+                        </svg>
+                        Hubungkan
+                    </button>
+                    <button id="drive-disconnect-btn" class="form-button-secondary" style="width:auto; padding:8px 16px; display:none;" onclick="disconnectGoogleDrive()">
+                        Putuskan
+                    </button>
+                </div>
+            </div>
+
+            <!-- Pengaturan Auto Backup -->
+            <div id="drive-settings" style="margin-bottom:15px; opacity:0.5; pointer-events:none;">
+                <div style="margin-bottom:10px;">
+                    <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+                        <input type="checkbox" id="auto-backup-transaction" onchange="saveDriveSettings()">
+                        <span>Backup otomatis setiap transaksi</span>
+                    </label>
+                </div>
+
+                <div style="margin-bottom:15px;">
+                    <label style="display:block; margin-bottom:5px;">Interval backup otomatis</label>
+                    <select id="backup-interval" class="form-input" onchange="saveDriveSettings()" style="width:100%;">
+                        <option value="1">Setiap 1 jam</option>
+                        <option value="3">Setiap 3 jam</option>
+                        <option value="6">Setiap 6 jam</option>
+                        <option value="12">Setiap 12 jam</option>
+                        <option value="24">Setiap 24 jam</option>
+                    </select>
+                </div>
+
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px;">
+                    <button class="form-button-primary" onclick="manualBackup()">
+                        <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" fill="none">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                            <polyline points="7 10 12 15 17 10"/>
+                            <line x1="12" y1="15" x2="12" y2="3"/>
+                        </svg>
+                        Backup Sekarang
+                    </button>
+                    <button class="form-button-secondary" onclick="openDriveFolder()">
+                        <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" fill="none">
+                            <path d="M4 6h16v12H4z"/>
+                            <line x1="8" y1="12" x2="16" y2="12"/>
+                        </svg>
+                        Buka Folder
+                    </button>
+                </div>
+
+                <!-- Info Backup Terakhir -->
+                <div style="background:#f0f9f6; border-radius:10px; padding:10px; margin-top:10px;">
+                    <div style="font-weight:600; color:#006B54; margin-bottom:5px;">Backup Terakhir</div>
+                    <div id="last-backup-info" style="font-size:0.9rem; color:#333;">Belum pernah backup</div>
+                </div>
+
+                <!-- Daftar Backup -->
+                <div style="margin-top:15px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                        <span style="font-weight:600; color:#333;">Riwayat Backup (10 terakhir)</span>
+                        <button class="action-btn edit-btn" onclick="refreshBackupList()" style="width:36px; height:36px;" title="Refresh">
+                            <svg viewBox="0 0 24 24" width="18" height="18">
+                                <path d="M23 4v6h-6"/>
+                                <path d="M1 20v-6h6"/>
+                                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+                            </svg>
+                        </button>
+                    </div>
+                    <div id="backup-list" style="max-height:200px; overflow-y:auto; border:1px solid #eee; border-radius:10px;">
+                        <div style="text-align:center; padding:20px; color:#999;">Hubungkan Google Drive untuk melihat backup</div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
