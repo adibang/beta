@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MUDA - Manajemen Relasi</title>
+    <title>POSPLUS - Manajemen Relasi</title>
     <style>
         /* ==================== RESET & BASE ==================== */
         * {
@@ -286,6 +286,18 @@
             justify-content: flex-end;
             margin-top: 20px;
         }
+        /* ==================== FILTER ==================== */
+        .filter-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .filter-row .search-input {
+            flex: 2;
+        }
+        .filter-row .level-select {
+            flex: 1;
+        }
     </style>
 </head>
 <body>
@@ -323,6 +335,17 @@
                 </svg>
                 Tambah
             </button>
+        </div>
+        <!-- Filter dan pencarian pelanggan -->
+        <div class="filter-row">
+            <input type="text" id="search-customer" class="form-input search-input" placeholder="Cari kode atau nama pelanggan..." oninput="filterCustomer()">
+            <select id="filter-customer-level" class="form-input level-select" onchange="filterCustomer()">
+                <option value="">Semua Level</option>
+                <option value="Bronze">Bronze</option>
+                <option value="Silver">Silver</option>
+                <option value="Gold">Gold</option>
+                <option value="Platinum">Platinum</option>
+            </select>
         </div>
         <div class="table-container" id="customer-list-container"></div>
     </div>
@@ -395,6 +418,10 @@
                 Tambah
             </button>
         </div>
+        <!-- Pencarian supplier -->
+        <div style="margin-bottom: 15px;">
+            <input type="text" id="search-supplier" class="form-input" placeholder="Cari kode atau nama supplier..." style="width:100%;" oninput="filterSupplier()">
+        </div>
         <div class="table-container" id="supplier-list-container"></div>
     </div>
 
@@ -455,6 +482,11 @@
             CUSTOMERS: 'customers',
             SUPPLIERS: 'suppliers'
         };
+
+        // ==================== FILTER VARIABLES ====================
+        let searchCustomerText = '';
+        let filterCustomerLevel = '';
+        let searchSupplierText = '';
 
         // ==================== DATABASE FUNCTIONS ====================
         async function initDatabase() {
@@ -541,6 +573,18 @@
             return 'Rp ' + angka.toLocaleString('id-ID');
         }
 
+        // ==================== FILTER FUNCTIONS ====================
+        function filterCustomer() {
+            searchCustomerText = document.getElementById('search-customer').value.toLowerCase().trim();
+            filterCustomerLevel = document.getElementById('filter-customer-level').value;
+            renderCustomerList();
+        }
+
+        function filterSupplier() {
+            searchSupplierText = document.getElementById('search-supplier').value.toLowerCase().trim();
+            renderSupplierList();
+        }
+
         // ==================== PAGE NAVIGATION ====================
         function showPage(page) {
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -549,11 +593,11 @@
             if (page === 'customers') {
                 document.getElementById('customer-list-page').classList.add('active');
                 document.getElementById('tab-customers').classList.add('active');
-                renderCustomerList();
+                filterCustomer(); // render dengan filter
             } else if (page === 'suppliers') {
                 document.getElementById('supplier-list-page').classList.add('active');
                 document.getElementById('tab-suppliers').classList.add('active');
-                renderSupplierList();
+                filterSupplier(); // render dengan filter
             }
         }
 
@@ -637,12 +681,22 @@
         function renderCustomerList() {
             const container = document.getElementById('customer-list-container');
             if (!container) return;
-            if (customers.length === 0) {
-                container.innerHTML = '<p style="text-align:center; padding:20px;">Belum ada pelanggan.</p>';
+
+            // Filter data berdasarkan pencarian dan level
+            const filtered = customers.filter(c => {
+                const codeMatch = (c.code || '').toLowerCase().includes(searchCustomerText);
+                const nameMatch = (c.name || '').toLowerCase().includes(searchCustomerText);
+                const levelMatch = filterCustomerLevel === '' || (c.level || 'Bronze') === filterCustomerLevel;
+                return (codeMatch || nameMatch) && levelMatch;
+            });
+
+            if (filtered.length === 0) {
+                container.innerHTML = '<p style="text-align:center; padding:20px;">Tidak ada pelanggan yang cocok.</p>';
                 return;
             }
+
             let html = '<table class="data-table"><thead><tr><th>Kode</th><th>Nama</th><th>Level</th><th>Kontak</th><th>Piutang</th><th>Aksi</th></tr></thead><tbody>';
-            customers.forEach(c => {
+            filtered.forEach(c => {
                 html += `<tr>
                     <td>${c.code || '-'}</td>
                     <td>${c.name}</td>
@@ -674,12 +728,21 @@
         function renderSupplierList() {
             const container = document.getElementById('supplier-list-container');
             if (!container) return;
-            if (suppliers.length === 0) {
-                container.innerHTML = '<p style="text-align:center; padding:20px;">Belum ada supplier.</p>';
+
+            // Filter data berdasarkan pencarian
+            const filtered = suppliers.filter(s => {
+                const codeMatch = (s.code || '').toLowerCase().includes(searchSupplierText);
+                const nameMatch = (s.name || '').toLowerCase().includes(searchSupplierText);
+                return codeMatch || nameMatch;
+            });
+
+            if (filtered.length === 0) {
+                container.innerHTML = '<p style="text-align:center; padding:20px;">Tidak ada supplier yang cocok.</p>';
                 return;
             }
+
             let html = '<table class="data-table"><thead><tr><th>Kode</th><th>Nama</th><th>Kontak</th><th>Email</th><th>Aksi</th></tr></thead><tbody>';
-            suppliers.forEach(s => {
+            filtered.forEach(s => {
                 html += `<tr>
                     <td>${s.code || '-'}</td>
                     <td>${s.name}</td>
@@ -759,6 +822,7 @@
                 await loadCustomers();
                 showNotification('Pelanggan berhasil disimpan', 'success');
                 showCustomerList();
+                filterCustomer(); // terapkan filter setelah kembali ke daftar
             } catch (error) {
                 showNotification('Gagal menyimpan: ' + error.message, 'error');
             }
@@ -769,7 +833,7 @@
             try {
                 await dbDelete(STORES.CUSTOMERS, id);
                 customers = customers.filter(c => c.id !== id);
-                renderCustomerList();
+                filterCustomer(); // render ulang dengan filter
                 showNotification('Pelanggan dihapus', 'success');
             } catch (error) {
                 showNotification('Gagal hapus: ' + error.message, 'error');
@@ -823,6 +887,7 @@
                 await loadSuppliers();
                 showNotification('Supplier berhasil disimpan', 'success');
                 showSupplierList();
+                filterSupplier(); // terapkan filter setelah kembali ke daftar
             } catch (error) {
                 showNotification('Gagal menyimpan: ' + error.message, 'error');
             }
@@ -833,7 +898,7 @@
             try {
                 await dbDelete(STORES.SUPPLIERS, id);
                 suppliers = suppliers.filter(s => s.id !== id);
-                renderSupplierList();
+                filterSupplier(); // render ulang dengan filter
                 showNotification('Supplier dihapus', 'success');
             } catch (error) {
                 showNotification('Gagal hapus: ' + error.message, 'error');
