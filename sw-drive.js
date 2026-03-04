@@ -121,36 +121,73 @@ let gisInited = false;
 let driveBackupInterval = null;
 let backupList = [];
 
+// Fungsi untuk memuat Google API
 function loadGoogleAPI() {
-    const script1 = document.createElement('script');
-    script1.src = 'https://apis.google.com/js/api.js';
-    script1.onload = initializeGapiClient;
-    document.head.appendChild(script1);
+    console.log('loadGoogleAPI called');
+    // Cek apakah sudah ada
+    if (typeof gapi !== 'undefined') {
+        console.log('gapi already loaded');
+        initializeGapiClient();
+    } else {
+        const script1 = document.createElement('script');
+        script1.src = 'https://apis.google.com/js/api.js';
+        script1.onload = () => {
+            console.log('Google API script loaded');
+            initializeGapiClient();
+        };
+        script1.onerror = () => {
+            console.error('Failed to load Google API script');
+            showNotification('Gagal memuat Google API. Periksa koneksi internet.', 'error');
+        };
+        document.head.appendChild(script1);
+    }
 
-    const script2 = document.createElement('script');
-    script2.src = 'https://accounts.google.com/gsi/client';
-    script2.onload = initializeGisClient;
-    document.head.appendChild(script2);
+    if (typeof google !== 'undefined' && google.accounts) {
+        console.log('GIS already loaded');
+        initializeGisClient();
+    } else {
+        const script2 = document.createElement('script');
+        script2.src = 'https://accounts.google.com/gsi/client';
+        script2.onload = () => {
+            console.log('GIS script loaded');
+            initializeGisClient();
+        };
+        script2.onerror = () => {
+            console.error('Failed to load GIS script');
+            showNotification('Gagal memuat Google Identity Services.', 'error');
+        };
+        document.head.appendChild(script2);
+    }
 }
 
 async function initializeGapiClient() {
-    await gapi.client.init({
-        apiKey: DRIVE_CONFIG.API_KEY,
-        discoveryDocs: DRIVE_CONFIG.DISCOVERY_DOCS,
-    });
-    gapiInited = true;
-    console.log('GAPI client initialized');
-    checkSavedToken();
+    try {
+        await gapi.client.init({
+            apiKey: DRIVE_CONFIG.API_KEY,
+            discoveryDocs: DRIVE_CONFIG.DISCOVERY_DOCS,
+        });
+        gapiInited = true;
+        console.log('GAPI client initialized');
+        checkSavedToken();
+    } catch (error) {
+        console.error('Error initializing GAPI client:', error);
+        showNotification('Gagal menginisialisasi Google API: ' + error.message, 'error');
+    }
 }
 
 function initializeGisClient() {
-    tokenClient = google.accounts.oauth2.initTokenClient({
-        client_id: DRIVE_CONFIG.CLIENT_ID,
-        scope: DRIVE_CONFIG.SCOPES,
-        callback: '',
-    });
-    gisInited = true;
-    console.log('GIS client initialized');
+    try {
+        tokenClient = google.accounts.oauth2.initTokenClient({
+            client_id: DRIVE_CONFIG.CLIENT_ID,
+            scope: DRIVE_CONFIG.SCOPES,
+            callback: '', // akan diisi saat connect
+        });
+        gisInited = true;
+        console.log('GIS client initialized');
+    } catch (error) {
+        console.error('Error initializing GIS client:', error);
+        showNotification('Gagal menginisialisasi Google Identity: ' + error.message, 'error');
+    }
 }
 
 function saveTokenToStorage(response) {
@@ -187,13 +224,31 @@ function checkSavedToken() {
 }
 
 function connectGoogleDrive() {
+    console.log('connectGoogleDrive called');
+    // Tampilkan notifikasi bahwa proses dimulai
+    showNotification('Menghubungkan ke Google Drive...', 'info');
+
     if (!gapiInited || !gisInited) {
+        console.warn('API not ready yet. gapiInited:', gapiInited, 'gisInited:', gisInited);
         showNotification('Google API masih loading, tunggu sebentar...', 'warning');
+        // Coba muat ulang API jika belum siap
+        if (!gapiInited && !gisInited) {
+            loadGoogleAPI();
+        }
+        return;
+    }
+
+    // Pastikan tokenClient sudah ada
+    if (!tokenClient) {
+        console.error('tokenClient not initialized');
+        showNotification('Token client belum siap. Coba refresh halaman.', 'error');
         return;
     }
 
     tokenClient.callback = async (response) => {
+        console.log('OAuth callback received', response);
         if (response.error) {
+            console.error('OAuth error:', response.error);
             showNotification('Gagal connect: ' + response.error, 'error');
             return;
         }
@@ -207,7 +262,13 @@ function connectGoogleDrive() {
         showNotification('Berhasil terhubung ke Google Drive', 'success');
     };
 
-    tokenClient.requestAccessToken({ prompt: 'consent' });
+    // Minta akses token
+    try {
+        tokenClient.requestAccessToken({ prompt: 'consent' });
+    } catch (error) {
+        console.error('Error requesting access token:', error);
+        showNotification('Gagal meminta token: ' + error.message, 'error');
+    }
 }
 
 function disconnectGoogleDrive() {
@@ -666,9 +727,10 @@ window.processPayment = async function(...args) {
     return result;
 };
 
-// Muat Google API setelah DOM siap
-document.addEventListener('DOMContentLoaded', function() {
-    setTimeout(loadGoogleAPI, 2000);
+// Muat Google API segera setelah halaman dimuat
+window.addEventListener('load', function() {
+    console.log('Window loaded, loading Google API...');
+    loadGoogleAPI();
 });
 
 // Ekspos fungsi ke global
