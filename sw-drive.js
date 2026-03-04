@@ -86,16 +86,7 @@ window.addEventListener('appinstalled', (evt) => {
     deferredPrompt = null;
 });
 
-// ==================== GOOGLE DRIVE BACKUP CONFIGURATION ====================
-const DRIVE_CONFIG = {
-    CLIENT_ID: '408769468812-550ik05h5nahcpq2kb749jso2gkokccq.apps.googleusercontent.com',
-    API_KEY: '',
-    SCOPES: 'https://www.googleapis.com/auth/drive.file',
-    DISCOVERY_DOCS: ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'],
-    FOLDER_NAME: 'POS Backup'
-};
-
-// ==================== DEFINISI STORES (salin dari app.js) ====================
+// ==================== DEFINISI STORES DAN VERSI DATABASE (salin dari app.js) ====================
 const STORES = {
     SETTINGS: 'settings',
     APP_STATE: 'appState',
@@ -110,6 +101,18 @@ const STORES = {
     USERS: 'users',
     ROLES: 'roles',
     BUNDLES: 'bundles'
+};
+
+// Versi database (harus sama dengan di app.js)
+const DB_VERSION = 20;
+
+// ==================== GOOGLE DRIVE BACKUP CONFIGURATION ====================
+const DRIVE_CONFIG = {
+    CLIENT_ID: '408769468812-550ik05h5nahcpq2kb749jso2gkokccq.apps.googleusercontent.com',
+    API_KEY: '',
+    SCOPES: 'https://www.googleapis.com/auth/drive.file',
+    DISCOVERY_DOCS: ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'],
+    FOLDER_NAME: 'POS Backup'
 };
 
 let tokenClient;
@@ -321,7 +324,6 @@ async function manualBackup() {
 }
 
 async function performBackup() {
-    // Asumsikan fungsi dbGetAll tersedia secara global dari app.js
     const backupData = {
         kasirCategories: await dbGetAll(STORES.KASIR_CATEGORIES),
         kasirItems: await dbGetAll(STORES.KASIR_ITEMS),
@@ -336,7 +338,7 @@ async function performBackup() {
         bundles: await dbGetAll(STORES.BUNDLES),
         settings: await dbGetAll(STORES.SETTINGS),
         backupDate: new Date().toISOString(),
-        version: 20 // Sesuaikan dengan DB_VERSION dari app.js
+        version: DB_VERSION
     };
 
     const jsonString = JSON.stringify(backupData, null, 2);
@@ -488,7 +490,6 @@ async function restoreBackup(fileId, fileName) {
 
         showLoading('Merestore data...');
 
-        // Asumsikan fungsi dbClear dan dbPut tersedia global
         await dbClear(STORES.KASIR_CATEGORIES);
         await dbClear(STORES.KASIR_ITEMS);
         await dbClear(STORES.KASIR_SATUAN);
@@ -522,17 +523,16 @@ async function restoreBackup(fileId, fileName) {
         await putAll(STORES.BUNDLES, backupData.bundles);
         await putAll(STORES.SETTINGS, backupData.settings);
 
-        // Panggil fungsi refresh dari app.js jika ada
-        if (typeof loadKasirCategories === 'function') await loadKasirCategories();
-        if (typeof loadKasirItems === 'function') await loadKasirItems();
-        if (typeof loadKasirSatuan === 'function') await loadKasirSatuan();
-        if (typeof loadCustomers === 'function') await loadCustomers();
-        if (typeof loadSuppliers === 'function') await loadSuppliers();
-        if (typeof loadPendingTransactions === 'function') await loadPendingTransactions();
-        if (typeof loadUsers === 'function') await loadUsers();
-        if (typeof loadRoles === 'function') await loadRoles();
-        if (typeof loadBundles === 'function') await loadBundles();
-        if (typeof updateDashboard === 'function') await updateDashboard();
+        await loadKasirCategories();
+        await loadKasirItems();
+        await loadKasirSatuan();
+        await loadCustomers();
+        await loadSuppliers();
+        await loadPendingTransactions();
+        await loadUsers();
+        await loadRoles();
+        await loadBundles();
+        await updateDashboard();
 
         showNotification('Restore berhasil! Aplikasi akan direfresh.', 'success');
         setTimeout(() => window.location.reload(), 2000);
@@ -645,9 +645,10 @@ function stopAutoBackup() {
     }
 }
 
-// Override fungsi processPayment dari app.js untuk auto backup
-// Kita simpan referensi asli
+// Simpan referensi ke fungsi processPayment asli
 const originalProcessPayment = window.processPayment;
+
+// Override processPayment untuk menambahkan auto backup
 window.processPayment = async function(...args) {
     const result = await originalProcessPayment(...args);
     
@@ -665,51 +666,10 @@ window.processPayment = async function(...args) {
     return result;
 };
 
-// Fungsi-fungsi pembantu yang mungkin belum didefinisikan (fallback)
-// Ini akan ditimpa oleh definisi dari app.js setelah dimuat
-function showNotification(message, type) {
-    // Fallback jika belum ada
-    console.log(`[${type}] ${message}`);
-    const notification = document.getElementById('notification');
-    if (notification) {
-        notification.textContent = message;
-        notification.style.backgroundColor = 
-            type === 'error' ? '#dc3545' : 
-            type === 'success' ? '#28a745' : 
-            type === 'warning' ? '#ffc107' : '#006B54';
-        notification.style.display = 'block';
-        setTimeout(() => {
-            notification.style.display = 'none';
-        }, 3000);
-    } else {
-        alert(message);
-    }
-}
-
-function showLoading(message) {
-    const notif = document.getElementById('notification');
-    if (notif) {
-        notif.textContent = message;
-        notif.style.backgroundColor = '#006B54';
-        notif.style.display = 'block';
-    }
-}
-
-function hideLoading() {
-    const notif = document.getElementById('notification');
-    if (notif) {
-        notif.style.display = 'none';
-    }
-}
-
-function playSuccessSound() {
-    // Implementasi sederhana atau bisa diabaikan
-    console.log('Success sound');
-}
-
-function playErrorSound() {
-    console.log('Error sound');
-}
+// Muat Google API setelah DOM siap
+document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(loadGoogleAPI, 2000);
+});
 
 // Ekspos fungsi ke global
 window.connectGoogleDrive = connectGoogleDrive;
@@ -723,8 +683,3 @@ window.getSavedToken = getSavedToken;
 window.updateDriveUI = updateDriveUI;
 window.loadDriveSettings = loadDriveSettings;
 window.loadBackupList = loadBackupList;
-
-// Inisialisasi setelah DOM siap
-document.addEventListener('DOMContentLoaded', function() {
-    setTimeout(loadGoogleAPI, 2000);
-});
