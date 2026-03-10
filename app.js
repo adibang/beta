@@ -374,7 +374,7 @@ function hideError() {
 
 // ==================== DATABASE CONFIGURATION ====================
 const DB_NAME = 'POSKasirDB';
-const DB_VERSION = 20;
+const DB_VERSION = 22;
 const STORES = {
     SETTINGS: 'settings',
     APP_STATE: 'appState',
