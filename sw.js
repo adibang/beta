@@ -118,7 +118,7 @@ async function syncTransactions() {
   try {
     // Buka database
     const db = await new Promise((resolve, reject) => {
-      const request = indexedDB.open('POSKasirDB', 20);
+      const request = indexedDB.open('POSKasirDB', 22);
       request.onsuccess = () => resolve(request.result);
       request.onerror = () => reject(request.error);
     });
@@ -148,8 +148,8 @@ self.addEventListener('push', (event) => {
   const title = 'MUDA';
   const options = {
     body: event.data ? event.data.text() : 'Ada update terbaru dari aplikasi',
-    icon: '/icons/icon-192x192.png',
-    badge: '/icons/icon-72x72.png'
+    icon: '/icons/icon-192.png',
+    badge: '/icons/icon-72.png'
   };
   event.waitUntil(self.registration.showNotification(title, options));
 });
